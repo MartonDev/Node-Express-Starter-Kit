@@ -1,8 +1,5 @@
 {
 
-  "port": 8000,
-  "mysql_username": "",
-  "mysql_password": "",
-  "mysql_db": ""
+  "port": 8000
 
 }
