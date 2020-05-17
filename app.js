@@ -1,33 +1,40 @@
 //require modules, server and config
 const express = require('express'),
 bodyParser = require('body-parser'),
-app = express(),
-config = require('./config.json');
+session = require('express-session'),
 
-//using public folder for get requests
-app.use(express.static(__dirname + '/public', {extensions: ['html']}));
+config = require('./config.json'),
+routes = require('./src/routes/routes'),
+errors = require('./src/errors'),
+logger = require('./src/logger'),
 
-app.use(bodyParser.urlencoded({extended: false}));
-app.use(bodyParser.json());
+app = express()
 
-//API handlers
-app.all('/api/*', function(request, response, next) {
+//session
+app.set('trust proxy', 1)
+app.use(session({
 
-  try {
+  secret: 'RANDOM_SECRET',
+  resave: false,
+  saveUninitialized: true,
+  //cookie: { secure: true } //use when https:// is active
 
-    const handler = require(`./app/api/${request.method.toLowerCase()}.js`);
-    handler.handle(request, response, next);
+}))
 
-  }catch(exception) {
+//routing
+app.use(express.static('./public', { extensions: ['html'] }))
 
-    response.json({'error': true, 'message': 'Unsupported request type.'});
+app.use(bodyParser.urlencoded({ extended: false }))
+app.use(bodyParser.json())
 
-  }
+app.use('/api', routes)
+app.use(errors.errorHandler)
+app.use(errors.nullRoute)
 
-});
+logger.info('Starting express server...')
 
-app.listen(config.port, function() {
+app.listen(config.port, () => {
 
-  console.log(`Server started on port ${config.port}`);
+  logger.info(`Server started on port ${config.port}`)
 
-});
+})
